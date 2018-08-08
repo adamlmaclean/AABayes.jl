@@ -8,74 +8,11 @@
 Package to implement Approximate Bayesian computation algorithms in the [Julia](https://julialang.org/) programming language. Package implements basic ABC rejection sampler and sequential monte carlo algorithm (ABC SMC) as in Toni. et al 2009 as well as model selection versions of both (Toni. et al 2010).
 
 ## Getting Started
-To download the package, once you're in a Julia session type the following command:
+To download the package, from a Julia session run:
 ```julia
-Pkg.add("ApproxBayes")
+Pkg.clone("git:https://github.com/alavendelm/AABayes.jl.git")
 ```
 
 ## Examples
-Below is a simple example using the package to infer the mean of a normal distribution. The first step is to create an ABC type which stores the information required to run an analysis. The first input is the simulation function which returns a distance between the simulated and target data sets, the second input is the number of parameters and the the third is the desired tolerance. The final required input is the prior distributions for the parameters, this specified as by creating an a ```Prior``` type which is an array of distribution types from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl/) of the same length as the number of parameters. There are some more optional parameters that are specific the the different algorithms.
+Here we work through an example following an ABC rejection run.
 
-First we'll load ```ApproxBayes``` and ```Distributions``` packages.
-
-```julia
-using ApproxBayes
-using Distributions
-```
-
-Now we'll set up the simulation function, we'll use the Kolmogorov Distance as our distance measure. The simulation needs to return 2 values the first being the distance, the second value is useful if additional information from the simulation needs to be stored, here this is not the case so we'll simply return 1, for example sometimes we might want to keep the raw data generated from each simulation.
-```julia
-function normaldist(params, constants, targetdata)
-
-  simdata = rand(Normal(params...), 1000)
-  ApproxBayes.ksdist(simdata, targetdata), 1
-end
-```
-
-Now we can generate some target data, we'll take 100 samples from a normal distirbution with mean = 2.0 and variance = 0.4.
-```julia
-srand(1)
-p1 = 2.0
-p2 = 0.4
-targetdata = rand(Normal(p1, p2), 1000)
-```
-
-Now we can setup an ABCrejection type and run the inference.
-```julia
-setup = ABCRejection(normaldist, #simulation function
-  2, # number of parameters
-  0.1, #target ϵ
-  Prior([Uniform(0.0, 20.0), Uniform(0.0, 2.0)]); # Prior for each of the parameters
-  maxiterations = 10^6, #Maximum number of iterations before the algorithm terminates
-  )
-
-# run ABC inference
-rejection = runabc(setup, targetdata)
-```
-
-We can do the same with ABC SMC algorithm.
-```julia
-setup = ABCSMC(normaldist, #simulation function
-  2, # number of parameters
-  0.1, #target ϵ
-  Prior([Uniform(0.0, 20.0), Uniform(0.0, 2.0)]), #Prior for each of the parameters
-  )
-
-smc = runabc(setup, targetdata, verbose = true, progress = true)
-```
-
-There are more optional arguments for each of the algorithms, to see these simply use ```?ABCSMC``` in a Julia session. If verbose and progress are set to true then a progress meter will be displayed and at the end of each population a summary will be printed.
-
-There are more examples provided in the examples directory and used as tests in the test directory. ApproxBayes.jl is also available as an option to perform Bayesian inference with differential equations in [DiffEqBayes.jl](https://github.com/JuliaDiffEq/DiffEqBayes.jl).
-
-### Convenience functions
-Also provided are some convenience functions for plotting and saving the output.
-
-- `writeoutput(abcresults)`: This will write the output to a text file should you wish to some additional analysis or plotting.
-- `plotmodelposterior(abcresults)`: For model selection algorithm will plot a bar chart showing the posterior probabilities of each respective model.
-- `plotparameterposterior(abcresults)`: Will plot the posteriors for each parameter. If model selection algorithm was used need to specify the model in addition as follows: `plotparameterposterior(abcresults, 1)`
-
-Plots can be saved by setting keyword argument to `save = true`, the plots will have a default name based on the algorithm used, this can the directory can be changed using `dir` and `plotname` keywords.
-
-## Acknowledgments
-Some of the code was inspired by [ABC-SysBio](http://www.theosysbio.bio.ic.ac.uk/resources/abc-sysbio/).
