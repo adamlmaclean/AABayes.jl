@@ -11,7 +11,7 @@ Package to implement *Approximate* Approximate Bayesian computation (Buzbas and 
 ## Getting Started
 To download the package, from a Julia session run:
 ```julia
-Pkg.clone("git:https://github.com/alavendelm/AABayes.jl.git")
+Pkg.clone("git://github.com/alavendelm/AABayes.jl")
 ```
 
 ## Examples
